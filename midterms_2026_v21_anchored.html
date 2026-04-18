@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>US Midterms 2026 · Bayesian Model v2.1 · Reality-Anchored</title>
+<meta name="description" content="Bayesian hierarchical model calibrated to observed approval. Projection of House 2026 with structural bias adjustment.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #0a0e13;
+  --bg-panel: #11161d;
+  --bg-elevated: #161c25;
+  --bg-input: #0d1218;
+  --border: #1f2935;
+  --border-strong: #2a3748;
+  --text: #e8eef5;
+  --text-dim: #8b98a9;
+  --text-dimmer: #5a6778;
+  --accent: #d4a857;
+  --accent-bright: #ffcc66;
+  --green: #4ade80;
+  --red: #f87171;
+  --amber: #fbbf24;
+  --amber-dim: #8a6a1f;
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+  --cyan: #22d3ee;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --sans: 'Space Grotesk', system-ui, sans-serif;
+  --serif: 'Instrument Serif', Georgia, serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+body {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(34, 211, 238, 0.06), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(212, 168, 87, 0.05), transparent);
+  background-attachment: fixed;
+}
+
+.container { max-width: 1280px; margin: 0 auto; padding: 40px 32px 80px; }
+
+.top-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 20px; background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 4px; margin-bottom: 32px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-dim);
+}
+.top-bar .status { display: flex; align-items: center; gap: 8px; }
+.top-bar-right { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.top-bar .version {
+  color: var(--cyan); border: 1px solid rgba(34, 211, 238, 0.3);
+  padding: 3px 10px; border-radius: 3px; font-size: 10px;
+}
+.top-bar .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--cyan); box-shadow: 0 0 8px var(--cyan);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+.lang-switch {
+  display: inline-flex; gap: 0;
+  border: 1px solid var(--border); border-radius: 3px;
+  overflow: hidden;
+}
+.lang-btn {
+  background: transparent; border: none; color: var(--text-dimmer);
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+  padding: 5px 12px; cursor: pointer; transition: all 0.15s;
+}
+.lang-btn:hover { background: var(--bg-elevated); color: var(--text-dim); }
+.lang-btn.active { background: var(--bg-elevated); color: var(--accent); }
+
+.header { margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 32px; }
+.eyebrow {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--cyan); margin-bottom: 20px;
+}
+.title {
+  font-family: var(--serif); font-size: clamp(38px, 5.5vw, 60px);
+  font-weight: 400; line-height: 1.05; letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+.title em { font-style: italic; color: var(--accent); }
+.deck { font-size: 17px; line-height: 1.55; color: var(--text-dim); max-width: 780px; }
+.meta-row {
+  display: flex; gap: 32px; margin-top: 24px; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 12px; color: var(--text-dimmer);
+}
+.meta-row strong { color: var(--text); font-weight: 500; }
+
+.anchor-block {
+  background: linear-gradient(90deg, rgba(34,211,238,0.08), transparent 60%);
+  border: 1px solid rgba(34,211,238,0.25);
+  border-left: 3px solid var(--cyan);
+  border-radius: 0 6px 6px 0;
+  padding: 22px 28px;
+  margin-bottom: 28px;
+}
+.anchor-top {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 20px; flex-wrap: wrap; margin-bottom: 18px;
+}
+.anchor-title-block { display: flex; flex-direction: column; gap: 4px; }
+.anchor-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--cyan);
+}
+.anchor-title {
+  font-family: var(--sans); font-size: 16px; font-weight: 500; color: var(--text);
+}
+.anchor-toggle {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--mono); font-size: 12px; color: var(--text-dim);
+}
+.switch {
+  position: relative; width: 44px; height: 22px;
+  background: var(--bg-input); border: 1px solid var(--border-strong);
+  border-radius: 11px; cursor: pointer; transition: background 0.2s;
+}
+.switch.on { background: rgba(34,211,238,0.25); border-color: var(--cyan); }
+.switch::after {
+  content: ""; position: absolute; width: 16px; height: 16px;
+  background: var(--text-dim); border-radius: 50%;
+  top: 2px; left: 2px; transition: all 0.2s;
+}
+.switch.on::after { left: 24px; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+
+.anchor-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.anchor-controls-triple { grid-template-columns: 1fr 1fr 1fr; }
+@media (max-width: 900px) { .anchor-controls-triple { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 700px) { .anchor-controls, .anchor-controls-triple { grid-template-columns: 1fr; } }
+.anchor-control { display: flex; flex-direction: column; gap: 8px; }
+.anchor-control .ac-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-dim);
+  display: flex; justify-content: space-between;
+}
+.anchor-control .ac-readout {
+  font-family: var(--mono); font-size: 22px; color: var(--cyan);
+  letter-spacing: -0.01em; font-weight: 400;
+}
+
+.gap-display {
+  margin-top: 14px; padding-top: 14px;
+  border-top: 1px dashed rgba(34,211,238,0.2);
+  display: flex; justify-content: space-between;
+  font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+  flex-wrap: wrap; gap: 8px;
+}
+.gap-display strong { color: var(--cyan); font-weight: 500; }
+.gap-display .warn { color: var(--amber); }
+
+.controls-section {
+  background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-elevated) 100%);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px; padding: 28px 32px;
+  margin-bottom: 28px; position: relative; overflow: hidden;
+}
+.controls-section::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.6;
+}
+.controls-section-title {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--text-dimmer); margin-bottom: 18px;
+}
+.controls-grid {
+  display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 28px;
+}
+.controls-grid-triple {
+  grid-template-columns: 1.4fr 1fr 1fr;
+}
+@media (max-width: 900px) {
+  .controls-grid, .controls-grid-triple { grid-template-columns: 1fr 1fr; }
+}
+
+.fixed-params {
+  display: flex; flex-wrap: wrap; gap: 18px; align-items: center;
+  margin-top: 22px; padding-top: 18px;
+  border-top: 1px dashed var(--border);
+  font-family: var(--mono); font-size: 11px;
+}
+.fp-label {
+  color: var(--text-dimmer); letter-spacing: 0.14em;
+  text-transform: uppercase; font-size: 10px;
+  margin-right: 4px;
+}
+.fp-item { display: inline-flex; gap: 6px; align-items: baseline; }
+.fp-key { color: var(--text-dim); }
+.fp-val { color: var(--text); font-weight: 500; }
+
+.control { display: flex; flex-direction: column; gap: 12px; }
+.control-label {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.control-label .hint { color: var(--text-dimmer); font-size: 10px; letter-spacing: 0.05em; text-transform: none; }
+.control-readout {
+  font-family: var(--mono); font-weight: 300;
+  color: var(--accent-bright); letter-spacing: -0.01em;
+  line-height: 1; text-shadow: 0 0 16px rgba(212,168,87,0.25);
+}
+.control.primary .control-readout { font-size: 42px; }
+.control .control-readout { font-size: 28px; }
+.control-readout .unit { font-size: 13px; color: var(--text-dim); margin-left: 6px; text-shadow: none; }
+
+.slider {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 5px; border-radius: 3px;
+  background: var(--bg-input); outline: none; cursor: pointer;
+  border: 1px solid var(--border);
+}
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent); cursor: pointer;
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 12px rgba(212,168,87,0.4);
+  transition: transform 0.1s;
+}
+.slider::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.slider::-moz-range-thumb {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent); cursor: pointer; border: 2px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 12px rgba(212,168,87,0.4);
+}
+.slider.cyan::-webkit-slider-thumb {
+  background: var(--cyan);
+  box-shadow: 0 0 0 1px var(--cyan), 0 0 12px rgba(34,211,238,0.4);
+}
+.slider.cyan::-moz-range-thumb {
+  background: var(--cyan);
+  box-shadow: 0 0 0 1px var(--cyan), 0 0 12px rgba(34,211,238,0.4);
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px; margin-bottom: 28px;
+}
+.metric {
+  background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 4px; padding: 16px 18px; transition: border-color 0.2s;
+}
+.metric:hover { border-color: var(--border-strong); }
+.metric-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dimmer); margin-bottom: 10px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.metric-code { color: var(--text-dimmer); font-size: 9px; }
+.metric-value {
+  font-family: var(--mono); font-size: 26px; font-weight: 400;
+  color: var(--text); line-height: 1; letter-spacing: -0.01em;
+}
+.metric-sub {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--text-dim); margin-top: 6px; letter-spacing: 0.02em;
+}
+.metric-ci {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--cyan); margin-top: 4px;
+}
+.metric.accent .metric-value { color: var(--accent-bright); }
+.metric.red .metric-value { color: var(--red); }
+
+.dual-proj {
+  background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 4px; padding: 20px 24px; margin-bottom: 24px;
+}
+.dual-title {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-dimmer); margin-bottom: 16px;
+}
+.dual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 600px) { .dual-grid { grid-template-columns: 1fr; } }
+.dual-col {
+  padding: 12px 16px; border-radius: 4px;
+  border-left: 2px solid var(--border-strong);
+}
+.dual-col.raw { border-left-color: var(--text-dimmer); }
+.dual-col.anchored { border-left-color: var(--cyan); background: rgba(34,211,238,0.04); }
+.dual-lbl {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-dimmer); margin-bottom: 8px;
+}
+.dual-col.anchored .dual-lbl { color: var(--cyan); }
+.dual-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 4px 0; font-family: var(--mono); font-size: 13px;
+}
+.dual-row .k { color: var(--text-dim); font-size: 11px; }
+.dual-row .v { color: var(--text); font-weight: 500; }
+.dual-col.anchored .dual-row .v { color: var(--cyan); }
+
+.verdict {
+  background: var(--bg-panel); border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--accent); border-radius: 4px;
+  padding: 20px 24px; margin-bottom: 32px; line-height: 1.65;
+}
+.verdict strong { color: var(--accent-bright); font-weight: 500; }
+.verdict.info { border-left-color: var(--blue); }
+.verdict.info strong { color: var(--blue); }
+.verdict.success { border-left-color: var(--green); }
+.verdict.success strong { color: var(--green); }
+.verdict.warn { border-left-color: var(--amber); }
+.verdict.warn strong { color: var(--amber); }
+.verdict.danger { border-left-color: var(--red); }
+.verdict.danger strong { color: var(--red); }
+.verdict-tag {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--text-dimmer); margin-bottom: 8px;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 16px; margin-bottom: 16px;
+}
+.chart-panel {
+  background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 4px; padding: 24px;
+}
+.chart-panel.full { grid-column: 1 / -1; }
+.chart-head {
+  margin-bottom: 14px;
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 16px; flex-wrap: wrap;
+}
+.chart-title { font-family: var(--sans); font-size: 14px; font-weight: 500; }
+.chart-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text-dimmer);
+  letter-spacing: 0.05em;
+}
+.chart-legend {
+  display: flex; flex-wrap: wrap; gap: 14px;
+  font-family: var(--mono); font-size: 11px;
+  color: var(--text-dim); margin-bottom: 12px;
+}
+.chart-legend .sw {
+  display: inline-block; width: 10px; height: 10px;
+  margin-right: 5px; vertical-align: middle; border-radius: 1px;
+}
+.chart-wrap { position: relative; width: 100%; height: 280px; }
+.chart-wrap.tall { height: 340px; }
+
+.method-section {
+  margin-top: 56px; padding-top: 40px; border-top: 1px solid var(--border);
+}
+.method-head {
+  font-family: var(--serif); font-size: 28px; font-style: italic; margin-bottom: 8px;
+}
+.method-deck {
+  font-family: var(--mono); font-size: 11px; color: var(--text-dimmer);
+  letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 28px;
+}
+.method-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px; margin-bottom: 24px;
+}
+.method-card {
+  background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 4px; padding: 20px 24px;
+}
+.method-card-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--cyan); margin-bottom: 8px;
+}
+.method-card h3 {
+  font-family: var(--sans); font-size: 16px; font-weight: 500; margin-bottom: 10px;
+}
+.method-card p { font-size: 13px; line-height: 1.65; color: var(--text-dim); }
+.method-card .formula {
+  font-family: var(--mono); font-size: 11px;
+  background: var(--bg-input); padding: 10px 14px;
+  border-radius: 3px; border: 1px solid var(--border);
+  margin-top: 12px; color: var(--accent);
+  overflow-x: auto; white-space: nowrap;
+}
+
+.footer {
+  margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border);
+  font-family: var(--mono); font-size: 11px; color: var(--text-dimmer);
+  line-height: 1.8;
+}
+.footer .footer-row {
+  display: flex; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px; margin-bottom: 12px;
+}
+.disclaimer {
+  margin-top: 16px; padding: 14px 18px;
+  background: var(--bg-input); border-left: 2px solid var(--amber-dim);
+  font-size: 11px; color: var(--text-dim); line-height: 1.65;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="top-bar">
+    <div class="status"><span class="dot"></span><span data-i18n="status"></span></div>
+    <div class="top-bar-right">
+      <div class="lang-switch" role="tablist">
+        <button class="lang-btn" data-lang="es" role="tab">ES</button>
+        <button class="lang-btn active" data-lang="en" role="tab">EN</button>
+      </div>
+      <span class="version">v2.1</span>
+      <span>Apr 17, 2026</span>
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="eyebrow" data-i18n="eyebrow"></div>
+    <h1 class="title" data-i18n-html="title"></h1>
+    <p class="deck" data-i18n-html="deck"></p>
+    <div class="meta-row">
+      <span data-i18n-html="meta1"></span>
+      <span data-i18n-html="meta2"></span>
+      <span data-i18n-html="meta3"></span>
+    </div>
+  </header>
+
+  <div class="anchor-block">
+    <div class="anchor-top">
+      <div class="anchor-title-block">
+        <div class="anchor-label" data-i18n="anchor_label"></div>
+        <div class="anchor-title" data-i18n="anchor_title"></div>
+      </div>
+      <div class="anchor-toggle">
+        <span id="toggle-label"></span>
+        <div class="switch on" id="anchor-switch" role="switch" aria-checked="true" tabindex="0"></div>
+      </div>
+    </div>
+    <div class="anchor-controls anchor-controls-triple" id="anchor-controls">
+      <div class="anchor-control">
+        <div class="ac-label">
+          <span data-i18n="current_appr"></span>
+          <span style="color:var(--text-dimmer);" data-i18n="aggregate"></span>
+        </div>
+        <div class="ac-readout" id="r-current">40.0%</div>
+        <input type="range" id="d-current" class="slider cyan" min="30" max="60" step="0.5" value="40">
+      </div>
+      <div class="anchor-control">
+        <div class="ac-label">
+          <span data-i18n="today_gas"></span>
+          <span style="color:var(--text-dimmer);" data-i18n="eia_aaa"></span>
+        </div>
+        <div class="ac-readout" id="r-today-gas">$4.08</div>
+        <input type="range" id="d-today-gas" class="slider cyan" min="2.50" max="5.00" step="0.01" value="4.08">
+      </div>
+      <div class="anchor-control">
+        <div class="ac-label">
+          <span data-i18n="today_unemp"></span>
+          <span style="color:var(--text-dimmer);" data-i18n="bls_latest"></span>
+        </div>
+        <div class="ac-readout" id="r-today-unemp">4.3%</div>
+        <input type="range" id="d-today-unemp" class="slider cyan" min="3.0" max="8.0" step="0.1" value="4.3">
+      </div>
+    </div>
+    <div style="font-family:var(--mono); font-size:10px; color:var(--text-dimmer); line-height:1.6; margin-top: 12px;" data-i18n-html="verified_note"></div>
+    <div class="gap-display">
+      <span><span data-i18n="gap_pred"></span> · <strong id="g-pred">46.6%</strong></span>
+      <span><span data-i18n="gap_real"></span> · <strong id="g-real">40.0%</strong></span>
+      <span><span data-i18n="gap_struct"></span> · <strong class="warn" id="g-gap">−6.6 pts</strong></span>
+    </div>
+  </div>
+
+  <div class="controls-section">
+    <div class="controls-section-title" data-i18n="scenario_oct"></div>
+    <div class="controls-grid controls-grid-triple">
+      <div class="control primary">
+        <div class="control-label">
+          <span data-i18n="gas_retail"></span>
+          <span class="hint" data-i18n="usd_nominal"></span>
+        </div>
+        <div class="control-readout" id="r-gas">$2.75<span class="unit" data-i18n="per_gal">/gal</span></div>
+        <input type="range" id="d-gas" class="slider" min="2.00" max="4.00" step="0.01" value="2.75">
+      </div>
+      <div class="control">
+        <div class="control-label">
+          <span data-i18n="unemp"></span>
+          <span class="hint">%</span>
+        </div>
+        <div class="control-readout" id="r-unemp">4.2<span class="unit">%</span></div>
+        <input type="range" id="d-unemp" class="slider" min="3.0" max="8.0" step="0.1" value="4.2">
+      </div>
+      <div class="control">
+        <div class="control-label">
+          <span data-i18n="gdp_growth"></span>
+          <span class="hint">% YoY</span>
+        </div>
+        <div class="control-readout" id="r-gdp">2.1<span class="unit">%</span></div>
+        <input type="range" id="d-gdp" class="slider" min="-2.0" max="5.0" step="0.1" value="2.1">
+      </div>
+    </div>
+    <div class="fixed-params">
+      <span class="fp-label" data-i18n="fixed_params"></span>
+      <span class="fp-item"><span class="fp-key" data-i18n="fp_seats"></span><span class="fp-val">220</span></span>
+      <span class="fp-item"><span class="fp-key" data-i18n="fp_president"></span><span class="fp-val">Trump (GOP)</span></span>
+      <span class="fp-item"><span class="fp-key" data-i18n="fp_inaug_gas"></span><span class="fp-val">$3.10</span></span>
+    </div>
+  </div>
+
+  <div class="dual-proj">
+    <div class="dual-title" data-i18n="dual_compare"></div>
+    <div class="dual-grid">
+      <div class="dual-col raw">
+        <div class="dual-lbl" data-i18n="model_raw"></div>
+        <div class="dual-row"><span class="k" data-i18n="approval"></span><span class="v" id="raw-appr">59.5%</span></div>
+        <div class="dual-row"><span class="k" data-i18n="seats_gop"></span><span class="v" id="raw-seats">-10</span></div>
+        <div class="dual-row"><span class="k" data-i18n="p_lose"></span><span class="v" id="raw-prob">74%</span></div>
+      </div>
+      <div class="dual-col anchored">
+        <div class="dual-lbl" data-i18n="model_anc"></div>
+        <div class="dual-row"><span class="k" data-i18n="approval"></span><span class="v" id="anc-appr">49.8%</span></div>
+        <div class="dual-row"><span class="k" data-i18n="seats_gop"></span><span class="v" id="anc-seats">-21</span></div>
+        <div class="dual-row"><span class="k" data-i18n="p_lose"></span><span class="v" id="anc-prob">91%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label"><span data-i18n="gas_real"></span><span class="metric-code">GASREAL</span></div>
+      <div class="metric-value" id="v-gasreal">$2.46</div>
+      <div class="metric-sub" data-i18n="gas_real_sub"></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label"><span data-i18n="delta_inaug"></span><span class="metric-code">Δ INAUG</span></div>
+      <div class="metric-value" id="v-since">-11.3%</div>
+      <div class="metric-sub" data-i18n="vs_inaug"></div>
+    </div>
+    <div class="metric accent">
+      <div class="metric-label"><span data-i18n="appr_oct"></span><span class="metric-code">APPR</span></div>
+      <div class="metric-value" id="v-appr">49.8%</div>
+      <div class="metric-sub" id="v-appr-sub"></div>
+      <div class="metric-ci" id="v-appr-ci"></div>
+    </div>
+    <div class="metric red">
+      <div class="metric-label"><span data-i18n="seats_house"></span><span class="metric-code">Δ GOP</span></div>
+      <div class="metric-value" id="v-seats">-21</div>
+      <div class="metric-sub" data-i18n="central_proj"></div>
+      <div class="metric-ci" id="v-seats-ci"></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label"><span data-i18n="p_lose"></span><span class="metric-code">PROB</span></div>
+      <div class="metric-value" id="v-prob">91%</div>
+      <div class="metric-sub" data-i18n="p_lose_sub"></div>
+    </div>
+  </div>
+
+  <div class="verdict" id="verdict">
+    <div class="verdict-tag" id="verdict-tag"></div>
+    <div id="verdict-txt"></div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-panel">
+      <div class="chart-head">
+        <div class="chart-title" data-i18n="chart1_title"></div>
+        <div class="chart-sub" data-i18n="chart1_sub"></div>
+      </div>
+      <div class="chart-legend">
+        <span><span class="sw" style="background:#5a6778;"></span><span data-i18n="lgd_raw"></span></span>
+        <span><span class="sw" style="background:#22d3ee;"></span><span data-i18n="lgd_anc"></span></span>
+      </div>
+      <div class="chart-wrap"><canvas id="c1" role="img" aria-label="Posterior approval distribution"></canvas></div>
+    </div>
+
+    <div class="chart-panel">
+      <div class="chart-head">
+        <div class="chart-title" data-i18n="chart2_title"></div>
+        <div class="chart-sub" data-i18n="chart2_sub"></div>
+      </div>
+      <div class="chart-legend">
+        <span><span class="sw" style="background:#5a6778;"></span><span data-i18n="lgd_raw"></span></span>
+        <span><span class="sw" style="background:#22d3ee;"></span><span data-i18n="lgd_anc"></span></span>
+      </div>
+      <div class="chart-wrap"><canvas id="c2" role="img" aria-label="Posterior seats distribution"></canvas></div>
+    </div>
+
+    <div class="chart-panel full">
+      <div class="chart-head">
+        <div class="chart-title" data-i18n="chart3_title"></div>
+        <div class="chart-sub" data-i18n="chart3_sub"></div>
+      </div>
+      <div class="chart-legend">
+        <span><span class="sw" style="background:#5a6778;"></span><span data-i18n="lgd_raw_proj"></span></span>
+        <span><span class="sw" style="background:#22d3ee;"></span><span data-i18n="lgd_anc_proj"></span></span>
+        <span><span class="sw" style="background:rgba(34,211,238,0.18);"></span><span data-i18n="lgd_ci_anc"></span></span>
+        <span><span class="sw" style="background:#d4a857;"></span><span data-i18n="lgd_scenario"></span></span>
+      </div>
+      <div class="chart-wrap tall"><canvas id="c3" role="img" aria-label="Sensitivity gas vs seats"></canvas></div>
+    </div>
+  </div>
+
+  <section class="method-section">
+    <div class="method-head" data-i18n-html="method_head"></div>
+    <div class="method-deck" data-i18n="method_deck"></div>
+
+    <div class="method-grid">
+      <div class="method-card">
+        <div class="method-card-label" data-i18n="mc1_label"></div>
+        <h3 data-i18n="mc1_title"></h3>
+        <p data-i18n-html="mc1_body"></p>
+      </div>
+      <div class="method-card">
+        <div class="method-card-label" data-i18n="mc2_label"></div>
+        <h3 data-i18n="mc2_title"></h3>
+        <p data-i18n-html="mc2_body"></p>
+      </div>
+      <div class="method-card">
+        <div class="method-card-label" data-i18n="mc3_label"></div>
+        <h3 data-i18n="mc3_title"></h3>
+        <p data-i18n-html="mc3_body"></p>
+        <div class="formula">appr_anchored = appr_model − gap</div>
+        <div class="formula">gap = appr_model(today) − appr_obs(today)</div>
+      </div>
+      <div class="method-card">
+        <div class="method-card-label" data-i18n="mc4_label"></div>
+        <h3 data-i18n="mc4_title"></h3>
+        <p data-i18n-html="mc4_body"></p>
+      </div>
+      <div class="method-card">
+        <div class="method-card-label" data-i18n="mc5_label"></div>
+        <h3 data-i18n="mc5_title"></h3>
+        <p data-i18n-html="mc5_body"></p>
+      </div>
+      <div class="method-card">
+        <div class="method-card-label" data-i18n="mc6_label"></div>
+        <h3 data-i18n="mc6_title"></h3>
+        <p data-i18n-html="mc6_body"></p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-row">
+      <span data-i18n="sources"></span>
+      <span data-i18n="mcmc_note"></span>
+    </div>
+    <div class="disclaimer" data-i18n-html="disclaimer"></div>
+  </footer>
+
+</div>
+
+<script>
+const I18N = {
+  es: {
+    status: "BAYESIANO ANCLADO A REALIDAD",
+    eyebrow: "Economía Política Cuantitativa · v2.1 · Anclado a Realidad",
+    title: 'La gasolina como <em>termómetro electoral</em><br>de las midterms 2026',
+    deck: 'Modelo bayesiano jerárquico con <strong style="color:var(--cyan);">ajuste por sesgo estructural</strong>. El modelo histórico (1978–2022) asume trayectorias de approval promedio; Trump en su segundo mandato arrancó desde un nivel anómalamente bajo. El anchor a realidad corrige ese gap.',
+    meta1: 'Ventana · <strong>1978–2022 (n=12)</strong>',
+    meta2: 'Approval observado hoy · <strong style="color:var(--cyan);">~40%</strong>',
+    meta3: 'Fuente · <strong>RCP 40.9, Silver Bulletin 39.7, Ballotpedia 41.0, DDHQ 40.4</strong>',
+    anchor_label: "Calibración · Bayesian update",
+    anchor_title: "Anclaje del modelo a la realidad observada",
+    toggle_on: "Activado",
+    toggle_off: "Desactivado",
+    current_appr: "Approval observado hoy",
+    aggregate: "aggregate",
+    today_gas: "Gasolina hoy",
+    eia_aaa: "EIA / AAA",
+    today_unemp: "Desempleo hoy",
+    bls_latest: "BLS última lectura",
+    verified_note: 'Valores por defecto verificados al <strong>17-abr-2026</strong> · ajustá los sliders si hay data más reciente. Estos valores se usan solo para calcular el gap entre modelo y realidad; no afectan la proyección de octubre 2026.',
+    gap_pred: "Approval predicho por modelo histórico",
+    gap_real: "Approval real",
+    gap_struct: "Gap estructural",
+    scenario_oct: "Escenario · Octubre 2026",
+    gas_retail: "Gasolina retail · Oct 2026",
+    usd_nominal: "USD nominal",
+    per_gal: "/gal",
+    unemp: "Desempleo",
+    gdp_growth: "Crecimiento GDP",
+    seats_def: "Seats defendidos GOP",
+    fixed_params: "Parámetros fijos del modelo",
+    fp_seats: "Seats GOP defendidos:",
+    fp_president: "Presidente en ejercicio:",
+    fp_inaug_gas: "Gasolina inauguración (ene-2025):",
+    dual_compare: "Comparación · modelo crudo vs modelo anclado",
+    model_raw: "Modelo crudo (histórico)",
+    model_anc: "Modelo anclado (realidad)",
+    approval: "Approval",
+    seats_gop: "Seats GOP",
+    p_lose: "P(pierde House)",
+    gas_real: "Gasolina real",
+    gas_real_sub: "USD 2022 (÷1.12)",
+    delta_inaug: "Δ inauguración",
+    vs_inaug: "vs $3.10 en ene-2025",
+    appr_oct: "Approval Trump · Oct 26",
+    seats_house: "Seats House",
+    central_proj: "proyección central",
+    p_lose_sub: "P(Δ seats ≤ -5)",
+    appr_sub_anc: "anclado a realidad",
+    appr_sub_raw: "modelo crudo",
+    ci_80: "IC 80%",
+    mode_anc: "anclado",
+    mode_raw: "crudo",
+    v_success_tag: "Escenario improbable",
+    v_success_txt: "Posterior {mode} sugiere ganancia de seats (P ≈ {p}%). Solo se dio 2 veces en 45 años.",
+    v_info_tag: "Pérdida leve",
+    v_info_txt: "Derrota <strong>contenida</strong>. P(pérdida ≥5 seats) = {p}%. {extra}",
+    v_info_extra_anc: "<strong>Corregido por sesgo estructural</strong>, el escenario sigue siendo adverso para GOP.",
+    v_warn_tag: "Pérdida moderada",
+    v_warn_txt: "Derrota <strong>significativa</strong>. P(pérdida ≥5 seats) = {p}%. {extra}",
+    v_warn_extra_anc: "Con el anchor aplicado, este es el escenario <strong>más probable</strong> dado el approval actual.",
+    v_danger_tag: "Wave election",
+    v_danger_txt: "<strong>Ola azul severa</strong>. P(pérdida ≥5) = {p}%. {extra}",
+    v_danger_extra_anc: "El anchor revela que el modelo crudo era demasiado optimista.",
+    chart1_title: "Posterior de approval · Oct 2026",
+    chart1_sub: "mediana + IC 80%",
+    chart2_title: "Posterior de seats · Oct 2026",
+    chart2_sub: "mediana + IC 80%",
+    chart3_title: "Sensibilidad · gasolina vs seats proyectados",
+    chart3_sub: "comparación anclado vs crudo",
+    lgd_raw: "Modelo crudo",
+    lgd_anc: "Anclado",
+    lgd_raw_proj: "Proyección cruda",
+    lgd_anc_proj: "Proyección anclada",
+    lgd_ci_anc: "IC 80% anclado",
+    lgd_scenario: "Escenario actual",
+    ch_approval_x: "Approval %",
+    ch_seats_x: "Δ Seats House",
+    ch_density_y: "Densidad",
+    ch_gas_x: "Gasolina retail nominal (USD/gal)",
+    method_head: '<em>El anchor</em> · qué hace y por qué',
+    method_deck: "Corrección por sesgo estructural · v2.1",
+    mc1_label: "1 · Detección del gap",
+    mc1_title: "Qué descubrimos",
+    mc1_body: 'El modelo entrenado con 12 midterms (1978-2022) predice para hoy (gas $4.08 AAA, desempleo 4.3% BLS marzo 2026) un approval de <strong>~46.6%</strong>. El dato observado está en <strong>~40%</strong>. El gap de <strong>-6.6 puntos</strong> es el sesgo estructural que el anchor corrige.',
+    mc2_label: "2 · Causa probable",
+    mc2_title: "Por qué Trump II es diferente",
+    mc2_body: 'Todos los presidentes del dataset arrancaron sus mandatos con approval mid-50s a 60s (honeymoon). Trump II arrancó desde ~47% y cayó de ahí. <strong>El intercepto histórico del modelo es demasiado alto para presidentes polarizantes</strong>.',
+    mc3_label: "3 · La corrección",
+    mc3_title: "Cómo funciona el anchor",
+    mc3_body: 'El anchor resta el gap observado de todas las proyecciones de approval. Las <strong>relaciones relativas se preservan</strong>, pero los <strong>niveles absolutos se desplazan</strong> al baseline actual.',
+    mc4_label: "4 · Propagación a seats",
+    mc4_title: "Efecto downstream",
+    mc4_body: 'Como seats depende de approval vía β_appr = +1.14, cada punto menos de approval anclado se traduce en <strong>~1.1 seats adicionales de pérdida</strong> para GOP. Un gap de -6.6 pts → ~7.5 seats adicionales de pérdida.',
+    mc5_label: "5 · Caveats",
+    mc5_title: "Qué NO hace el anchor",
+    mc5_body: 'El anchor asume que <strong>el gap observado hoy se mantiene constante</strong> hasta noviembre 2026. Si Trump se recupera, el gap se cerraría. Si empeora, aumentaría. Es una <strong>estimación conservadora</strong>.',
+    mc6_label: "6 · Validación filosófica",
+    mc6_title: "Bayesiano coherente",
+    mc6_body: 'El anchor es matemáticamente una actualización bayesiana: combina el prior del modelo histórico con un dato observado actual. <strong>Cuando tenés evidencia nueva, usala, no la ignores</strong>.',
+    sources: "Fuentes · EIA, BLS, BEA, FRED, Gallup, Clerk of the House, RealClearPolling, Silver Bulletin, Ballotpedia",
+    mcmc_note: "MCMC · PyMC 5 · NUTS + Reality anchor",
+    disclaimer: '<strong style="color: var(--amber);">DISCLAIMER v2.1.</strong> El anchor corrige el sesgo de nivel pero no puede corregir lo que el modelo no observa (polarización, eventos futuros, dinámica específica de Trump II). La proyección anclada es más realista que la cruda, pero sigue sujeta a error. El IC 80% de ±25 seats persiste — el anchor no reduce incertidumbre, solo desplaza el centro. Si el gap cambia entre abril y noviembre, las proyecciones quedan desactualizadas. Este análisis no constituye asesoramiento ni predicción oficial.'
+  },
+  en: {
+    status: "REALITY-ANCHORED BAYESIAN",
+    eyebrow: "Quantitative Political Economy · v2.1 · Reality-Anchored",
+    title: 'Gasoline as the <em>electoral thermometer</em><br>of the 2026 midterms',
+    deck: 'Hierarchical Bayesian model with <strong style="color:var(--cyan);">structural bias adjustment</strong>. The historical model (1978–2022) assumes average approval trajectories; Trump in his second term started from an anomalously low level. The reality anchor corrects that gap.',
+    meta1: 'Window · <strong>1978–2022 (n=12)</strong>',
+    meta2: 'Current observed approval · <strong style="color:var(--cyan);">~40%</strong>',
+    meta3: 'Source · <strong>RCP 40.9, Silver Bulletin 39.7, Ballotpedia 41.0, DDHQ 40.4</strong>',
+    anchor_label: "Calibration · Bayesian update",
+    anchor_title: "Anchor model to observed reality",
+    toggle_on: "Enabled",
+    toggle_off: "Disabled",
+    current_appr: "Current observed approval",
+    aggregate: "aggregate",
+    today_gas: "Gasoline today",
+    eia_aaa: "EIA / AAA",
+    today_unemp: "Unemployment today",
+    bls_latest: "BLS latest reading",
+    verified_note: 'Default values verified as of <strong>Apr 17, 2026</strong> · adjust sliders if newer data is available. These values are only used to compute the model-vs-reality gap; they do not affect the October 2026 projection.',
+    gap_pred: "Approval predicted by historical model",
+    gap_real: "Actual approval",
+    gap_struct: "Structural gap",
+    scenario_oct: "Scenario · October 2026",
+    gas_retail: "Retail gasoline · Oct 2026",
+    usd_nominal: "Nominal USD",
+    per_gal: "/gal",
+    unemp: "Unemployment",
+    gdp_growth: "GDP growth",
+    seats_def: "GOP seats defended",
+    fixed_params: "Fixed model parameters",
+    fp_seats: "GOP seats defended:",
+    fp_president: "Sitting president:",
+    fp_inaug_gas: "Gasoline at inauguration (Jan-2025):",
+    dual_compare: "Comparison · raw model vs anchored model",
+    model_raw: "Raw model (historical)",
+    model_anc: "Anchored model (reality)",
+    approval: "Approval",
+    seats_gop: "GOP seats",
+    p_lose: "P(loses House)",
+    gas_real: "Real gasoline",
+    gas_real_sub: "2022 USD (÷1.12)",
+    delta_inaug: "Δ inauguration",
+    vs_inaug: "vs $3.10 in Jan-2025",
+    appr_oct: "Trump approval · Oct 26",
+    seats_house: "House seats",
+    central_proj: "central projection",
+    p_lose_sub: "P(Δ seats ≤ -5)",
+    appr_sub_anc: "anchored to reality",
+    appr_sub_raw: "raw model",
+    ci_80: "80% CI",
+    mode_anc: "anchored",
+    mode_raw: "raw",
+    v_success_tag: "Unlikely scenario",
+    v_success_txt: "{mode} posterior suggests seat gain (P ≈ {p}%). Only occurred twice in 45 years.",
+    v_info_tag: "Mild loss",
+    v_info_txt: "<strong>Contained</strong> defeat. P(loss ≥5 seats) = {p}%. {extra}",
+    v_info_extra_anc: "<strong>Corrected for structural bias</strong>, the scenario remains adverse for GOP.",
+    v_warn_tag: "Moderate loss",
+    v_warn_txt: "<strong>Significant</strong> defeat. P(loss ≥5 seats) = {p}%. {extra}",
+    v_warn_extra_anc: "With the anchor applied, this is the <strong>most likely</strong> scenario given current approval.",
+    v_danger_tag: "Wave election",
+    v_danger_txt: "<strong>Severe blue wave</strong>. P(loss ≥5) = {p}%. {extra}",
+    v_danger_extra_anc: "The anchor reveals the raw model was too optimistic.",
+    chart1_title: "Approval posterior · Oct 2026",
+    chart1_sub: "median + 80% CI",
+    chart2_title: "Seats posterior · Oct 2026",
+    chart2_sub: "median + 80% CI",
+    chart3_title: "Sensitivity · gasoline vs projected seats",
+    chart3_sub: "anchored vs raw comparison",
+    lgd_raw: "Raw model",
+    lgd_anc: "Anchored",
+    lgd_raw_proj: "Raw projection",
+    lgd_anc_proj: "Anchored projection",
+    lgd_ci_anc: "Anchored 80% CI",
+    lgd_scenario: "Current scenario",
+    ch_approval_x: "Approval %",
+    ch_seats_x: "Δ House seats",
+    ch_density_y: "Density",
+    ch_gas_x: "Retail gasoline nominal (USD/gal)",
+    method_head: '<em>The anchor</em> · what it does and why',
+    method_deck: "Structural bias correction · v2.1",
+    mc1_label: "1 · Gap detection",
+    mc1_title: "What we discovered",
+    mc1_body: 'The model trained on 12 midterms (1978-2022) predicts today (gas $4.08 AAA, unemployment 4.3% BLS March 2026) an approval of <strong>~46.6%</strong>. The observed data is <strong>~40%</strong>. The <strong>-6.6 point gap</strong> is the structural bias the anchor corrects.',
+    mc2_label: "2 · Probable cause",
+    mc2_title: "Why Trump II is different",
+    mc2_body: 'All presidents in the dataset started their terms with mid-50s to 60s approval (honeymoon). Trump II started at ~47% and fell from there. <strong>The model\'s historical intercept is too high for polarizing presidents</strong>.',
+    mc3_label: "3 · The correction",
+    mc3_title: "How the anchor works",
+    mc3_body: 'The anchor subtracts the observed gap from all approval projections. <strong>Relative relationships are preserved</strong>, but <strong>absolute levels shift</strong> to the current baseline.',
+    mc4_label: "4 · Seat propagation",
+    mc4_title: "Downstream effect",
+    mc4_body: 'Since seats depend on approval via β_appr = +1.14, each point of anchored approval translates to <strong>~1.1 additional lost seats</strong> for GOP. A -6.6 pt gap → ~7.5 additional lost seats.',
+    mc5_label: "5 · Caveats",
+    mc5_title: "What the anchor does NOT do",
+    mc5_body: 'The anchor assumes <strong>today\'s observed gap holds constant</strong> through November 2026. If Trump recovers, the gap would close. If he deteriorates, it would widen. It is a <strong>conservative estimate</strong>.',
+    mc6_label: "6 · Philosophical validation",
+    mc6_title: "Coherent Bayesian",
+    mc6_body: 'The anchor is mathematically a Bayesian update: it combines the historical model prior with a currently observed data point. <strong>When you have new evidence, use it, don\'t ignore it</strong>.',
+    sources: "Sources · EIA, BLS, BEA, FRED, Gallup, Clerk of the House, RealClearPolling, Silver Bulletin, Ballotpedia",
+    mcmc_note: "MCMC · PyMC 5 · NUTS + Reality anchor",
+    disclaimer: '<strong style="color: var(--amber);">DISCLAIMER v2.1.</strong> The anchor corrects level bias but cannot correct what the model does not observe (polarization, future events, Trump II-specific dynamics). The anchored projection is more realistic than the raw one, but still subject to error. The ±25 seat 80% CI persists — the anchor does not reduce uncertainty, only shifts the center. If the gap changes between April and November, projections become outdated. This analysis does not constitute advice or official prediction.'
+  }
+};
+
+let currentLang = localStorage.getItem('midterms-lang') || 'en';
+
+function applyLang(lang) {
+  currentLang = lang;
+  try { localStorage.setItem('midterms-lang', lang); } catch(e) {}
+  document.documentElement.lang = lang;
+  const t = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key] !== undefined) el.textContent = t[key];
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.getAttribute('data-i18n-html');
+    if (t[key] !== undefined) el.innerHTML = t[key];
+  });
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  if (typeof updateAll === 'function') updateAll();
+}
+
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => applyLang(btn.dataset.lang));
+});
+
+// ─── Model ───
+const APPR = {
+  intercept: 49.71, beta_gas: -7.082, beta_since: -0.101, beta_unemp: -0.741,
+  sigma: 6.99, g_mean: 3.15, gs_mean: 23.02, u_mean: 6.01
+};
+const SEATS = {
+  intercept: -21.07, beta_appr: 1.140, beta_defended: -0.296, beta_gdp: 1.773,
+  sigma: 16.42, a_mean: 49.42, sd_mean: 223.33, gd_mean: 2.78
+};
+const CPI_DEFLATOR = 1.12;
+const GAS_INAUG = 3.10;
+function getTodayValues() {
+  return {
+    gas_nominal: parseFloat(document.getElementById('d-today-gas').value),
+    unemp: parseFloat(document.getElementById('d-today-unemp').value)
+  };
+}
+
+function predictApproval(gasNom, unemp) {
+  const gasReal = gasNom / CPI_DEFLATOR;
+  const gasSince = (gasNom / GAS_INAUG - 1) * 100;
+  return APPR.intercept +
+          APPR.beta_gas * (gasReal - APPR.g_mean) +
+          APPR.beta_since * (gasSince - APPR.gs_mean) +
+          APPR.beta_unemp * (unemp - APPR.u_mean);
+}
+
+function calcGap(apprObserved) {
+  const today = getTodayValues();
+  const predToday = predictApproval(today.gas_nominal, today.unemp);
+  return predToday - apprObserved;
+}
+
+function randNormal(mean, std) {
+  const u1 = Math.random(), u2 = Math.random();
+  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  return mean + z * std;
+}
+
+function samplePosterior(gasNom, unemp, gdp, seatsDef, apprObserved, useAnchor, nSamples=2000) {
+  const gasReal = gasNom / CPI_DEFLATOR;
+  const gasSince = (gasNom / GAS_INAUG - 1) * 100;
+  const gap = useAnchor ? calcGap(apprObserved) : 0;
+  const apprSamples = [], seatsSamples = [];
+  for (let i = 0; i < nSamples; i++) {
+    const mu_a = APPR.intercept +
+                  APPR.beta_gas * (gasReal - APPR.g_mean) +
+                  APPR.beta_since * (gasSince - APPR.gs_mean) +
+                  APPR.beta_unemp * (unemp - APPR.u_mean) - gap;
+    const appr = mu_a + randNormal(0, APPR.sigma);
+    apprSamples.push(appr);
+    const mu_s = SEATS.intercept +
+                  SEATS.beta_appr * (appr - SEATS.a_mean) +
+                  SEATS.beta_defended * (seatsDef - SEATS.sd_mean) +
+                  SEATS.beta_gdp * (gdp - SEATS.gd_mean);
+    seatsSamples.push(mu_s + randNormal(0, SEATS.sigma));
+  }
+  return { apprSamples, seatsSamples, gap };
+}
+
+function percentile(arr, p) {
+  const sorted = [...arr].sort((a,b) => a-b);
+  const idx = (p/100) * (sorted.length - 1);
+  const lo = Math.floor(idx), hi = Math.ceil(idx);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+}
+function median(arr) { return percentile(arr, 50); }
+function histogram(samples, nBins=30, fixedRange=null) {
+  const min = fixedRange ? fixedRange[0] : Math.min(...samples);
+  const max = fixedRange ? fixedRange[1] : Math.max(...samples);
+  const binWidth = (max - min) / nBins;
+  const bins = new Array(nBins).fill(0);
+  const centers = [];
+  for (let i = 0; i < nBins; i++) centers.push(min + binWidth*(i+0.5));
+  samples.forEach(s => {
+    let idx = Math.floor((s - min) / binWidth);
+    if (idx >= nBins) idx = nBins-1;
+    if (idx < 0) idx = 0;
+    bins[idx]++;
+  });
+  return { centers, counts: bins };
+}
+
+Chart.defaults.font.family = "'JetBrains Mono', monospace";
+Chart.defaults.color = '#8b98a9';
+Chart.defaults.borderColor = '#1f2935';
+
+let chart1, chart2, chart3;
+const c1ctx = document.getElementById('c1').getContext('2d');
+const c2ctx = document.getElementById('c2').getContext('2d');
+const c3ctx = document.getElementById('c3').getContext('2d');
+
+let anchorEnabled = true;
+const dGas = document.getElementById('d-gas');
+const dUnemp = document.getElementById('d-unemp');
+const dGdp = document.getElementById('d-gdp');
+const SEATS_DEFENDED = 220; // Fijo: GOP mayoría post-2024
+const dCurrent = document.getElementById('d-current');
+const dTodayGas = document.getElementById('d-today-gas');
+const dTodayUnemp = document.getElementById('d-today-unemp');
+const anchorSwitch = document.getElementById('anchor-switch');
+const toggleLabel = document.getElementById('toggle-label');
+const anchorControls = document.getElementById('anchor-controls');
+
+function toggleAnchor() {
+  anchorEnabled = !anchorEnabled;
+  if (anchorEnabled) {
+    anchorSwitch.classList.add('on');
+    anchorSwitch.setAttribute('aria-checked', 'true');
+    anchorControls.style.opacity = '1';
+    anchorControls.style.pointerEvents = 'auto';
+  } else {
+    anchorSwitch.classList.remove('on');
+    anchorSwitch.setAttribute('aria-checked', 'false');
+    anchorControls.style.opacity = '0.4';
+    anchorControls.style.pointerEvents = 'none';
+  }
+  updateAll();
+}
+anchorSwitch.addEventListener('click', toggleAnchor);
+anchorSwitch.addEventListener('keydown', (e) => {
+  if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleAnchor(); }
+});
+
+function updateReadouts() {
+  const t = I18N[currentLang];
+  document.getElementById('r-gas').innerHTML = '$' + parseFloat(dGas.value).toFixed(2) + '<span class="unit">' + t.per_gal + '</span>';
+  document.getElementById('r-unemp').innerHTML = parseFloat(dUnemp.value).toFixed(1) + '<span class="unit">%</span>';
+  document.getElementById('r-gdp').innerHTML = parseFloat(dGdp.value).toFixed(1) + '<span class="unit">%</span>';
+  document.getElementById('r-current').textContent = parseFloat(dCurrent.value).toFixed(1) + '%';
+  document.getElementById('r-today-gas').textContent = '$' + parseFloat(dTodayGas.value).toFixed(2);
+  document.getElementById('r-today-unemp').textContent = parseFloat(dTodayUnemp.value).toFixed(1) + '%';
+  toggleLabel.textContent = anchorEnabled ? t.toggle_on : t.toggle_off;
+}
+
+function updateGapDisplay() {
+  const apprObs = parseFloat(dCurrent.value);
+  const today = getTodayValues();
+  const predToday = predictApproval(today.gas_nominal, today.unemp);
+  const gap = predToday - apprObs;
+  document.getElementById('g-pred').textContent = predToday.toFixed(1) + '%';
+  document.getElementById('g-real').textContent = apprObs.toFixed(1) + '%';
+  const gapEl = document.getElementById('g-gap');
+  gapEl.textContent = (gap >= 0 ? '+' : '') + (-gap).toFixed(1) + ' pts';
+  gapEl.className = Math.abs(gap) > 5 ? 'warn' : '';
+}
+
+function updateMetrics() {
+  const t = I18N[currentLang];
+  const gasNom = parseFloat(dGas.value);
+  const unemp = parseFloat(dUnemp.value);
+  const gdp = parseFloat(dGdp.value);
+  const seatsDef = SEATS_DEFENDED;
+  const apprObs = parseFloat(dCurrent.value);
+
+  const gasReal = gasNom / CPI_DEFLATOR;
+  const gasSince = (gasNom / GAS_INAUG - 1) * 100;
+
+  document.getElementById('v-gasreal').textContent = '$' + gasReal.toFixed(2);
+  document.getElementById('v-since').textContent = (gasSince>=0?'+':'') + gasSince.toFixed(1) + '%';
+
+  const raw = samplePosterior(gasNom, unemp, gdp, seatsDef, apprObs, false);
+  const rawA = median(raw.apprSamples);
+  const rawS = median(raw.seatsSamples);
+  const rawP = raw.seatsSamples.filter(s => s <= -5).length / raw.seatsSamples.length;
+  const anc = samplePosterior(gasNom, unemp, gdp, seatsDef, apprObs, true);
+  const ancA = median(anc.apprSamples);
+  const ancALo = percentile(anc.apprSamples, 10);
+  const ancAHi = percentile(anc.apprSamples, 90);
+  const ancS = median(anc.seatsSamples);
+  const ancSLo = percentile(anc.seatsSamples, 10);
+  const ancSHi = percentile(anc.seatsSamples, 90);
+  const ancP = anc.seatsSamples.filter(s => s <= -5).length / anc.seatsSamples.length;
+
+  document.getElementById('raw-appr').textContent = rawA.toFixed(1) + '%';
+  document.getElementById('raw-seats').textContent = (rawS>=0?'+':'') + Math.round(rawS);
+  document.getElementById('raw-prob').textContent = (rawP*100).toFixed(0) + '%';
+  document.getElementById('anc-appr').textContent = ancA.toFixed(1) + '%';
+  document.getElementById('anc-seats').textContent = (ancS>=0?'+':'') + Math.round(ancS);
+  document.getElementById('anc-prob').textContent = (ancP*100).toFixed(0) + '%';
+
+  const useA = anchorEnabled ? ancA : rawA;
+  const useS = anchorEnabled ? ancS : rawS;
+  const useP = anchorEnabled ? ancP : rawP;
+  const useALo = anchorEnabled ? ancALo : percentile(raw.apprSamples, 10);
+  const useAHi = anchorEnabled ? ancAHi : percentile(raw.apprSamples, 90);
+  const useSLo = anchorEnabled ? ancSLo : percentile(raw.seatsSamples, 10);
+  const useSHi = anchorEnabled ? ancSHi : percentile(raw.seatsSamples, 90);
+
+  document.getElementById('v-appr').textContent = useA.toFixed(1) + '%';
+  document.getElementById('v-appr-sub').textContent = anchorEnabled ? t.appr_sub_anc : t.appr_sub_raw;
+  document.getElementById('v-appr-ci').textContent = t.ci_80 + ': [' + useALo.toFixed(0) + ', ' + useAHi.toFixed(0) + ']';
+  document.getElementById('v-seats').textContent = (useS>=0?'+':'') + Math.round(useS);
+  document.getElementById('v-seats-ci').textContent = t.ci_80 + ': [' + Math.round(useSLo) + ', ' + (useSHi>=0?'+':'') + Math.round(useSHi) + ']';
+  document.getElementById('v-prob').textContent = (useP*100).toFixed(0) + '%';
+
+  const verdict = document.getElementById('verdict');
+  const verdictTag = document.getElementById('verdict-tag');
+  const verdictTxt = document.getElementById('verdict-txt');
+  verdict.className = 'verdict';
+  const mode = anchorEnabled ? t.mode_anc : t.mode_raw;
+  let klass, tag, txt;
+  const pStr = (useP*100).toFixed(0);
+
+  if (useS > 0) {
+    klass = 'success';
+    tag = t.v_success_tag + ' · ' + mode;
+    txt = t.v_success_txt.replace('{mode}', mode).replace('{p}', (100-useP*100).toFixed(0));
+  } else if (useS > -10) {
+    klass = 'info';
+    tag = t.v_info_tag + ' · ' + mode;
+    txt = t.v_info_txt.replace('{p}', pStr).replace('{extra}', anchorEnabled ? t.v_info_extra_anc : '');
+  } else if (useS > -25) {
+    klass = 'warn';
+    tag = t.v_warn_tag + ' · ' + mode;
+    txt = t.v_warn_txt.replace('{p}', pStr).replace('{extra}', anchorEnabled ? t.v_warn_extra_anc : '');
+  } else {
+    klass = 'danger';
+    tag = t.v_danger_tag + ' · ' + mode;
+    txt = t.v_danger_txt.replace('{p}', pStr).replace('{extra}', anchorEnabled ? t.v_danger_extra_anc : '');
+  }
+  verdict.classList.add(klass);
+  verdictTag.textContent = tag;
+  verdictTxt.innerHTML = txt;
+}
+
+function drawChart1() {
+  const t = I18N[currentLang];
+  const gasNom = parseFloat(dGas.value);
+  const unemp = parseFloat(dUnemp.value);
+  const gdp = parseFloat(dGdp.value);
+  const seatsDef = SEATS_DEFENDED;
+  const apprObs = parseFloat(dCurrent.value);
+  const raw = samplePosterior(gasNom, unemp, gdp, seatsDef, apprObs, false, 3000);
+  const anc = samplePosterior(gasNom, unemp, gdp, seatsDef, apprObs, true, 3000);
+  const allAppr = [...raw.apprSamples, ...anc.apprSamples];
+  const range = [Math.min(...allAppr)-2, Math.max(...allAppr)+2];
+  const hRaw = histogram(raw.apprSamples, 30, range);
+  const hAnc = histogram(anc.apprSamples, 30, range);
+  if (chart1) chart1.destroy();
+  chart1 = new Chart(c1ctx, {
+    type: 'bar',
+    data: {
+      labels: hRaw.centers.map(c => c.toFixed(0)),
+      datasets: [
+        { label: t.lgd_raw, data: hRaw.counts, backgroundColor: 'rgba(90,103,120,0.5)', borderWidth: 0 },
+        { label: t.lgd_anc, data: hAnc.counts, backgroundColor: 'rgba(34,211,238,0.55)', borderWidth: 0 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#11161d', borderColor: '#2a3748', borderWidth: 1,
+          titleColor: '#e8eef5', bodyColor: '#8b98a9', padding: 10,
+          callbacks: {
+            title: (items) => t.ch_approval_x + ': ' + items[0].label + '%',
+            label: (ctx) => ctx.dataset.label + ': ' + ctx.parsed.y
+          }
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: t.ch_approval_x, color: '#5a6778', font: {size: 10} },
+             grid: { display: false }, ticks: { color: '#5a6778', maxTicksLimit: 8 } },
+        y: { title: { display: true, text: t.ch_density_y, color: '#5a6778', font: {size: 10} },
+             grid: { color: '#1a2129' }, ticks: { color: '#5a6778' } }
+      }
+    }
+  });
+}
+
+function drawChart2() {
+  const t = I18N[currentLang];
+  const gasNom = parseFloat(dGas.value);
+  const unemp = parseFloat(dUnemp.value);
+  const gdp = parseFloat(dGdp.value);
+  const seatsDef = SEATS_DEFENDED;
+  const apprObs = parseFloat(dCurrent.value);
+  const raw = samplePosterior(gasNom, unemp, gdp, seatsDef, apprObs, false, 3000);
+  const anc = samplePosterior(gasNom, unemp, gdp, seatsDef, apprObs, true, 3000);
+  const allSeats = [...raw.seatsSamples, ...anc.seatsSamples];
+  const range = [Math.min(...allSeats)-5, Math.max(...allSeats)+5];
+  const hRaw = histogram(raw.seatsSamples, 30, range);
+  const hAnc = histogram(anc.seatsSamples, 30, range);
+  if (chart2) chart2.destroy();
+  chart2 = new Chart(c2ctx, {
+    type: 'bar',
+    data: {
+      labels: hRaw.centers.map(c => Math.round(c)),
+      datasets: [
+        { label: t.lgd_raw, data: hRaw.counts, backgroundColor: 'rgba(90,103,120,0.5)', borderWidth: 0 },
+        { label: t.lgd_anc, data: hAnc.counts, backgroundColor: 'rgba(34,211,238,0.55)', borderWidth: 0 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#11161d', borderColor: '#2a3748', borderWidth: 1,
+          titleColor: '#e8eef5', bodyColor: '#8b98a9', padding: 10,
+          callbacks: {
+            title: (items) => t.ch_seats_x + ': ' + items[0].label,
+            label: (ctx) => ctx.dataset.label + ': ' + ctx.parsed.y
+          }
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: t.ch_seats_x, color: '#5a6778', font: {size: 10} },
+             grid: { display: false }, ticks: { color: '#5a6778', maxTicksLimit: 8 } },
+        y: { title: { display: true, text: t.ch_density_y, color: '#5a6778', font: {size: 10} },
+             grid: { color: '#1a2129' }, ticks: { color: '#5a6778' } }
+      }
+    }
+  });
+}
+
+function drawChart3() {
+  const t = I18N[currentLang];
+  const unemp = parseFloat(dUnemp.value);
+  const gdp = parseFloat(dGdp.value);
+  const seatsDef = SEATS_DEFENDED;
+  const apprObs = parseFloat(dCurrent.value);
+  const gSel = parseFloat(dGas.value);
+  const gasRange = [];
+  for (let g = 2.00; g <= 4.00; g += 0.08) gasRange.push(g);
+  const centrals_raw = [], centrals_anc = [], uppers_anc = [], lowers_anc = [];
+  for (const g of gasRange) {
+    const raw = samplePosterior(g, unemp, gdp, seatsDef, apprObs, false, 500);
+    const anc = samplePosterior(g, unemp, gdp, seatsDef, apprObs, true, 500);
+    centrals_raw.push(median(raw.seatsSamples));
+    centrals_anc.push(median(anc.seatsSamples));
+    uppers_anc.push(percentile(anc.seatsSamples, 90));
+    lowers_anc.push(percentile(anc.seatsSamples, 10));
+  }
+  if (chart3) chart3.destroy();
+  chart3 = new Chart(c3ctx, {
+    type: 'line',
+    data: {
+      labels: gasRange.map(g => '$' + g.toFixed(2)),
+      datasets: [
+        { label: 'ci_hi', data: uppers_anc, borderColor: 'transparent', backgroundColor: 'rgba(34,211,238,0.15)', fill: '+1', pointRadius: 0 },
+        { label: 'ci_lo', data: lowers_anc, borderColor: 'transparent', backgroundColor: 'rgba(34,211,238,0.15)', fill: false, pointRadius: 0 },
+        { label: t.lgd_raw_proj, data: centrals_raw, borderColor: '#5a6778', borderWidth: 1.5, borderDash: [5,4], pointRadius: 0, fill: false, tension: 0.2 },
+        { label: t.lgd_anc_proj, data: centrals_anc, borderColor: '#22d3ee', borderWidth: 2, pointRadius: 0, fill: false, tension: 0.2 },
+        { label: t.lgd_scenario, data: gasRange.map((g,i) => Math.abs(g-gSel)<0.041 ? (anchorEnabled ? centrals_anc[i] : centrals_raw[i]) : null), pointBackgroundColor: '#d4a857', pointBorderColor: '#ffcc66', pointBorderWidth: 2, pointRadius: 10, pointStyle: 'rectRot', showLine: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#11161d', borderColor: '#2a3748', borderWidth: 1,
+          titleColor: '#e8eef5', bodyColor: '#8b98a9', padding: 10,
+          callbacks: {
+            title: (items) => items[0].label,
+            label: (ctx) => {
+              if (ctx.datasetIndex === 2) return t.lgd_raw + ': ' + Math.round(ctx.parsed.y) + ' seats';
+              if (ctx.datasetIndex === 3) return t.lgd_anc + ': ' + Math.round(ctx.parsed.y) + ' seats';
+              return null;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: t.ch_gas_x, color: '#5a6778', font: {size: 10} },
+             grid: { color: '#1a2129' }, ticks: { color: '#5a6778', maxTicksLimit: 12 } },
+        y: { title: { display: true, text: t.ch_seats_x, color: '#5a6778', font: {size: 10} },
+             grid: { color: '#1a2129' }, ticks: { color: '#5a6778' } }
+      }
+    }
+  });
+}
+
+function updateAll() {
+  updateReadouts();
+  updateGapDisplay();
+  updateMetrics();
+  drawChart1();
+  drawChart2();
+  drawChart3();
+}
+
+[dGas, dUnemp, dGdp, dCurrent, dTodayGas, dTodayUnemp].forEach(d => d.addEventListener('input', updateAll));
+
+// Initial render
+applyLang(currentLang);
+</script>
+</body>
+</html>
